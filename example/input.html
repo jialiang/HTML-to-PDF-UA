@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+
+    <title>Example Document</title>
+
+    <meta name="subject" content="Example Document" />
+    <meta name="author" content="Jia Liang" />
+    <meta name="description" content="An example document." />
+
+    <style>
+      @page {
+        margin: 0;
+
+        size: a4;
+      }
+
+      @font-face {
+        font-family: "Maax";
+        font-weight: 400;
+        font-style: normal;
+
+        src: url(./fonts/Maax-Regular.woff2) format("woff2");
+      }
+
+      @font-face {
+        font-family: "Maax";
+        font-weight: 500;
+        font-style: normal;
+
+        src: url(./fonts/Maax-Medium.woff2) format("woff2");
+      }
+
+      @font-face {
+        font-family: "Maax";
+        font-weight: 700;
+        font-style: normal;
+
+        src: url(./fonts/Maax-Bold.woff2) format("woff2");
+      }
+
+      html {
+        font-family: "Maax", sans-serif;
+        font-size: 0.433cm;
+        line-height: 1.15;
+        color: black;
+        background: #333;
+      }
+
+      body {
+        position: relative;
+        box-sizing: border-box;
+        width: 21cm;
+        height: 29.7cm;
+        margin: 1cm auto;
+        padding: 0.75cm;
+        background: white;
+      }
+
+      @media print {
+        body {
+          margin: 0;
+        }
+      }
+
+      a {
+        white-space: nowrap;
+        text-decoration: none;
+        color: black;
+        border-bottom: 4px solid blue;
+      }
+
+      body > h1 {
+        font-size: 4rem;
+        width: 23rem;
+        margin: 0 2rem 0 0;
+        padding: 1rem;
+        white-space: nowrap;
+        border: 4px solid black;
+      }
+
+      .call,
+      .email {
+        font-size: 1.1rem;
+        font-weight: 500;
+        line-height: 1.25;
+        width: 15rem;
+        padding: 0;
+        list-style: none;
+        color: #757575;
+      }
+
+      .call {
+        width: 9rem;
+        margin: -7.25rem 0 1.35rem 27rem;
+      }
+
+      .email {
+        width: 12rem;
+        margin: 0 0 0 27rem;
+      }
+
+      .email a {
+        padding-bottom: 0.1rem;
+      }
+
+      .tagline {
+        font-size: 1.5rem;
+        font-weight: 500;
+        margin: 1.5rem 0;
+        text-align: center;
+      }
+
+      section {
+        width: 49%;
+        margin-bottom: 2rem;
+      }
+
+      section h1 {
+        font-size: 0.8rem;
+        font-weight: 500;
+        margin: 0 0 -0.5rem 0;
+      }
+
+      section h1 span {
+        display: inline;
+        padding: 0.25rem 0.5rem;
+        letter-spacing: 0.75px;
+        text-transform: uppercase;
+        color: white;
+        background: black;
+      }
+
+      section h2 {
+        font-size: 1.1rem;
+        font-weight: 500;
+        margin-top: 1.5rem;
+        margin-bottom: 0.5rem;
+      }
+
+      section p {
+        margin: 0.75rem 0;
+      }
+
+      section ul {
+        padding-left: 0.75rem;
+        list-style-type: square;
+      }
+
+      section li {
+        margin: 0.75rem 0;
+      }
+
+      .pills {
+        margin: 0.75rem 0 0 0;
+        padding-left: 0;
+        color: white;
+      }
+
+      .pills span {
+        line-height: 1.75;
+        padding: 0.125rem 0.25rem;
+        color: black;
+        background: #f2f2f2;
+      }
+
+      #section-2 {
+        margin: -49.6rem 0 2rem 23.5rem;
+      }
+
+      #section-3,
+      #section-4 {
+        margin: 0 0 2rem 23.5rem;
+      }
+    </style>
+
+    <bookmarks>
+      <bookmark name="Top" href="#top" />
+      <bookmark name="Section 1" href="#section-1" />
+      <bookmark name="Section 2" href="#section-2" />
+      <bookmark name="Section 3" href="#section-3" />
+      <bookmark name="Section 4" href="#section-4" />
+    </bookmarks>
+  </head>
+  <body>
+    <h1 id="top">Don Quixote</h1>
+
+    <p class="call">Call <a href="tel:+6512345678" title="My phone number.">+65 12345678</a></p>
+    <p class="email"
+      >Email <a href="mailto:example@example.com" title="My email.">example@example.com</a></p
+    >
+
+    <p class="tagline">Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+
+    <section id="section-1">
+      <h1><span>Section 1</span></h1>
+
+      <h2>Lorem Ipsum</h2>
+      <ul>
+        <li
+          >Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt
+          ut labore et dolore magna aliqua.</li
+        >
+        <li
+          >Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt
+          ut labore et dolore magna aliqua.
+        </li>
+        <li
+          >Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt
+          ut labore et dolore magna aliqua.
+        </li>
+      </ul>
+
+      <h2>Lorem Ipsum</h2>
+      <ul>
+        <li
+          >Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt
+          ut labore et dolore magna aliqua.</li
+        >
+        <li
+          >Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt
+          ut labore et dolore magna aliqua.
+        </li>
+        <li
+          >Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt
+          ut labore et dolore magna aliqua.
+        </li>
+      </ul>
+
+      <h2>Lorem Ipsum</h2>
+      <ul>
+        <li
+          >Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt
+          ut labore et dolore magna aliqua.</li
+        >
+        <li
+          >Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt
+          ut labore et dolore magna aliqua.
+        </li>
+        <li
+          >Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt
+          ut labore et dolore magna aliqua.
+        </li>
+      </ul>
+    </section>
+
+    <section id="section-2">
+      <h1><span>Section 2</span></h1>
+
+      <h2>Lorem Ipsum</h2>
+      <p>Lorem ipsum.</p>
+      <p>Lorem ipsum.</p>
+    </section>
+
+    <section id="section-3">
+      <h1><span>Section 3</span></h1>
+
+      <h2>Lorem ipsum</h2>
+      <p class="pills"
+        ><span>Item 1</span>, <span>Item 2</span>, <span>Item 3</span>, <span>Item 4</span>,
+        <span>Item 5</span></p
+      >
+    </section>
+
+    <section id="section-4">
+      <h1><span>Section 4</span></h1>
+
+      <h2><a href="https://example.com" target="_blank" title="Example website">Lorem Ipsum</a></h2>
+      <p
+        >Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt
+        ut labore et dolore magna aliqua.</p
+      >
+
+      <h2><a href="https://example.com" target="_blank" title="Example website">Lorem Ipsum</a></h2>
+      <p
+        >Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt
+        ut labore et dolore magna aliqua.</p
+      >
+
+      <h2><a href="https://example.com" target="_blank" title="Example website">Lorem Ipsum</a></h2>
+      <p
+        >Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt
+        ut labore et dolore magna aliqua.</p
+      >
+    </section>
+  </body>
+</html>
