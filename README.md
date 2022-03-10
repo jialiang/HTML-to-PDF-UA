@@ -36,9 +36,9 @@ You can download the compiled Java app from the [Releases page](https://github.c
 - Make sure to define these metadata in the `<head>` of your HTML file:
 
   ```
-    <meta name="subject" content="the subject" />
-    <meta name="author" content="the author" />
-    <meta name="description" content="the description" />
+  <meta name="subject" content="the subject" />
+  <meta name="author" content="the author" />
+  <meta name="description" content="the description" />
   ```
 
 - Remember to define the bookmarks in the `<head>` of your HTML file. It functions as a table of contents for your PDF.
@@ -67,8 +67,10 @@ Make sure you have a Java Development Kit _(1.8 and above)_ and Apache Maven ins
 
 I used a slightly modified copy of OpenHTMLtoPDF 1.0.10 _(the latest version at the time of writing)_. The PDFs created using the official OpenHTMLtoPDF 1.0.10 library were violating [Clause: 7.18.5 of PDF/UA](https://github.com/veraPDF/veraPDF-validation-profiles/wiki/PDFUA-Part-1-rules#rule-7185-2).
 
-- Download the source code for [OpenHTMLtoPDF 1.0.10](https://github.com/danfickle/openhtmltopdf/releases/tag/openhtmltopdf-parent-1.0.10)
-- Replace `PdfBoxAccessibilityHelper.java` with [my version](https://github.com/jialiang/HTML-to-PDF-UA/blob/master/openhtmltopdf/PdfBoxAccessibilityHelper.java)
+- Download the source code for [OpenHTMLtoPDF 1.0.10](https://github.com/danfickle/openhtmltopdf/releases/tag/openhtmltopdf-parent-1.0.10) (Later versions might work too).
+- Extract it and open your console in the created folder.
+- Do `git init`.
+- Copy the [patch](https://github.com/jialiang/HTML-to-PDF-UA/tree/master/openhtmltopdf/0001-Add-alt-text-to-Annotation-of-Link.patch) into the folder and apply it by doing `git am 0001-Add-alt-text-to-Annotation-of-Link.patch`.
 - Run `mvn clean install` to compile, test, package and install it into your local Maven repository.
 - Clone this repository.
 - Run `mvn clean package` to compile, test and package this project.

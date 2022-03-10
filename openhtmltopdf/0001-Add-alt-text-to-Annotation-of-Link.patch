@@ -1,0 +1,30 @@
+From b3710af8f7cfd60007d8127a15e2276304c1a914 Mon Sep 17 00:00:00 2001
+From: Jia Liang <jialiang.ho@qanvast.com>
+Date: Thu, 10 Mar 2022 16:11:21 +0800
+Subject: [PATCH] Add alt text to Annotation of Link
+
+---
+ .../openhtmltopdf/pdfboxout/PdfBoxAccessibilityHelper.java | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/openhtmltopdf-pdfbox/src/main/java/com/openhtmltopdf/pdfboxout/PdfBoxAccessibilityHelper.java b/openhtmltopdf-pdfbox/src/main/java/com/openhtmltopdf/pdfboxout/PdfBoxAccessibilityHelper.java
+index 0258e9cb..48aa2b7d 100644
+--- a/openhtmltopdf-pdfbox/src/main/java/com/openhtmltopdf/pdfboxout/PdfBoxAccessibilityHelper.java
++++ b/openhtmltopdf-pdfbox/src/main/java/com/openhtmltopdf/pdfboxout/PdfBoxAccessibilityHelper.java
+@@ -1227,7 +1227,12 @@ public class PdfBoxAccessibilityHelper {
+             PDObjectReference ref = new PDObjectReference();
+             ref.setReferencedObject(pdAnnotation);
+             struct.appendKid(ref);  
+-            
++
++            if (anchor != null) {
++                String alternate = anchor.getElement() != null ? anchor.getElement().getAttribute("title") : "";
++                pdAnnotation.setContents(alternate);
++            }
++
+             // We also need to save the pair so we can add it to the number tree for reverse lookup.
+             AnnotationWithStructureParent annotStructParentPair = new AnnotationWithStructureParent();
+             annotStructParentPair.annotation = pdAnnotation;
+-- 
+2.34.1
+
