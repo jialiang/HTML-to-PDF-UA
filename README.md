@@ -71,6 +71,7 @@ I used a slightly modified copy of OpenHTMLtoPDF 1.0.10 _(the latest version at 
 - Extract it and open your console in the created folder.
 - Do `git init`.
 - Copy the [patch](https://github.com/jialiang/HTML-to-PDF-UA/tree/master/openhtmltopdf/0001-Add-alt-text-to-Annotation-of-Link.patch) into the folder and apply it by doing `git am 0001-Add-alt-text-to-Annotation-of-Link.patch`.
+- Optionally, do the same for other patches
 - Run `mvn clean install` to compile, test, package and install it into your local Maven repository.
 - Clone this repository.
 - Run `mvn clean package` to compile, test and package this project.

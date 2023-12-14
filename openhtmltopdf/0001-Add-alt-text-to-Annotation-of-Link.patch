@@ -1,7 +1,7 @@
-From b3710af8f7cfd60007d8127a15e2276304c1a914 Mon Sep 17 00:00:00 2001
-From: Jia Liang <jialiang.ho@qanvast.com>
-Date: Thu, 10 Mar 2022 16:11:21 +0800
-Subject: [PATCH] Add alt text to Annotation of Link
+From 168e01a7485f3a5da978f613a841c00a64e3ea89 Mon Sep 17 00:00:00 2001
+From: Jia Liang <hojialiang@protonmail.com>
+Date: Sun, 12 Mar 2023 02:00:24 +0800
+Subject: [PATCH 1/2] Add alt text to Annotation of Link
 
 ---
  .../openhtmltopdf/pdfboxout/PdfBoxAccessibilityHelper.java | 7 ++++++-
@@ -26,5 +26,5 @@ index 0258e9cb..48aa2b7d 100644
              AnnotationWithStructureParent annotStructParentPair = new AnnotationWithStructureParent();
              annotStructParentPair.annotation = pdAnnotation;
 -- 
-2.34.1
+2.43.0.windows.1
 

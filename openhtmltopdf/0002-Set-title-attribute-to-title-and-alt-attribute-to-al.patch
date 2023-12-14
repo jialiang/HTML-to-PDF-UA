@@ -1,0 +1,42 @@
+From 178dd7365198f2d9214324a18778a63f2559d3a8 Mon Sep 17 00:00:00 2001
+From: Jia Liang <hojialiang@protonmail.com>
+Date: Thu, 14 Dec 2023 13:55:34 +0800
+Subject: [PATCH 2/2] Set title attribute to title and alt attribute to alt
+
+---
+ .../pdfboxout/PdfBoxAccessibilityHelper.java         | 12 +++++++++++-
+ 1 file changed, 11 insertions(+), 1 deletion(-)
+
+diff --git a/openhtmltopdf-pdfbox/src/main/java/com/openhtmltopdf/pdfboxout/PdfBoxAccessibilityHelper.java b/openhtmltopdf-pdfbox/src/main/java/com/openhtmltopdf/pdfboxout/PdfBoxAccessibilityHelper.java
+index 48aa2b7d..3e75f520 100644
+--- a/openhtmltopdf-pdfbox/src/main/java/com/openhtmltopdf/pdfboxout/PdfBoxAccessibilityHelper.java
++++ b/openhtmltopdf-pdfbox/src/main/java/com/openhtmltopdf/pdfboxout/PdfBoxAccessibilityHelper.java
+@@ -126,6 +126,7 @@ public class PdfBoxAccessibilityHelper {
+         void handleGlobalAttributes() {
+             handleLangAttribute();
+             handleTitleAttribute();
++            handleAltAttribute();
+         }
+         
+         void handleLangAttribute() {
+@@ -139,7 +140,16 @@ public class PdfBoxAccessibilityHelper {
+         
+         void handleTitleAttribute() {
+             if (box != null && box.getElement() != null) {
+-                String alternate = box.getElement().getAttribute("title");
++                String title = box.getElement().getAttribute("title");
++                if (!title.isEmpty()) {
++                    this.elem.setTitle(title);
++                }
++            }
++        }
++
++        void handleAltAttribute() {
++             if (box != null && box.getElement() != null) {
++                String alternate = box.getElement().getAttribute("alt");
+                 if (!alternate.isEmpty()) {
+                     this.elem.setAlternateDescription(alternate);
+                 }
+-- 
+2.43.0.windows.1
+
