@@ -63,7 +63,7 @@ You can download the compiled Java app from the [Releases page](https://github.c
 
 ## Compilation
 
-Make sure you have a Java Development Kit _(1.8 and above)_ and Apache Maven installed.
+Make sure you have a Java Development Kit _(21 and above)_ and Apache Maven installed.
 
 I used a slightly modified copy of OpenHTMLtoPDF 1.0.10 _(the latest version at the time of writing)_. The PDFs created using the official OpenHTMLtoPDF 1.0.10 library were violating [Clause: 7.18.5 of PDF/UA](https://github.com/veraPDF/veraPDF-validation-profiles/wiki/PDFUA-Part-1-rules#rule-7185-2).
 
