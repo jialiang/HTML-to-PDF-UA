@@ -10,7 +10,7 @@ In the [Example folder](https://github.com/jialiang/HTML-to-PDF-UA/tree/master/e
 
 The output PDF has been checked using the following tools and found to be PDF/UA and PDF/A-3A compliant:
 
-- [PDF Accessibility Check 3](https://www.access-for-all.ch/en/pdf-accessibility-checker.html) _(Accessibility report included in Example folder)_
+- [PDF Accessibility Check 3](https://pdfua.foundation/en/pdf-accessibility-checker-pac/) _(Accessibility report included in Example folder)_
 - [Adobe Acrobat Preflight Tool](https://helpx.adobe.com/acrobat/using/create-verify-pdf-accessibility.html)
 - [VeraPDF Conformance Checker](https://docs.verapdf.org/validation/)
 
@@ -21,7 +21,7 @@ You can download the compiled Java app from the [Releases page](https://github.c
 ## Usage
 
 - Make sure you have Java installed.
-- In the same folder as the HTML file you want to convert, create a folder called "fonts". This folder must contain all the fonts used by the HTML in TrueType _(.ttf)_ format _(even the ones installed locally on your PC needs to be included)_. It uses heuristics based on filename to determine the font weight _(e.g. thin, extra-light, light, regular, medium, semi-bold, bold, extra-bold, black)_ and font style _(e.g. italic)_.
+- In the same folder as the HTML file you want to convert, create a folder called "fonts". This folder must contain all the fonts used by the HTML in TrueType _(.ttf)_ format _(even the ones installed locally on your PC needs to be included)_. It uses the font name reported by the font file; It checks if the filename contains certain keywords to determine the font weight _(e.g. thin, extra-light, light, regular, medium, semi-bold, bold, extra-bold, black)_ and font style _(e.g. italic)_.
 - Make sure to set the page size and margins of the generated PDF by including this style block in your HTML file:
 
   ```
@@ -59,6 +59,7 @@ You can download the compiled Java app from the [Releases page](https://github.c
 
 - Ensure that all links contain a `title` attribute to describe the link.
 - Run `java -jar html-to-pdf-ua.jar "path/to/your/html/file"` on your console.
+- Append `pdf/a-4` to the command to use PDF/A-4 standards instead of PDF/A-3a.
 - A file called `output.pdf` will be generated in the same folder as your HTML file.
 
 ## Compilation
@@ -70,8 +71,7 @@ I used a slightly modified copy of OpenHTMLtoPDF 1.0.10 _(the latest version at 
 - Download the source code for [OpenHTMLtoPDF 1.0.10](https://github.com/danfickle/openhtmltopdf/releases/tag/openhtmltopdf-parent-1.0.10) (Later versions might work too).
 - Extract it and open your console in the created folder.
 - Do `git init`.
-- Copy the [patch](https://github.com/jialiang/HTML-to-PDF-UA/tree/master/openhtmltopdf/0001-Add-alt-text-to-Annotation-of-Link.patch) into the folder and apply it by doing `git am 0001-Add-alt-text-to-Annotation-of-Link.patch`.
-- Optionally, do the same for other patches
+- Copy the [patches](https://github.com/jialiang/HTML-to-PDF-UA/tree/master/openhtmltopdf/) into the folder and apply them by doing `git am *.patch`.
 - Run `mvn clean install` to compile, test, package and install it into your local Maven repository.
 - Clone this repository.
 - Run `mvn clean package` to compile, test and package this project.
@@ -80,18 +80,8 @@ I used a slightly modified copy of OpenHTMLtoPDF 1.0.10 _(the latest version at 
 
 Don't expect to plug in any random HTML file and receive a nice PDF.
 
-OpenHTMLtoPDF uses it's own engine to render the HTML file. So expect e-mail client level feature support _(e.g. flexbox and calc are not supported)_ and plenty of inconsistencies with mainstream browsers.
+OpenHTMLtoPDF uses its own engine to render the HTML file. So expect email client level feature support _(e.g. flexbox and calc are not supported)_ and plenty of inconsistencies with mainstream browsers.
 
 Chances are, you'll need to rebuild your HTML to accommodate it.
 
 As unfortunate as the situation is, I've yet to find anything free that's better than OpenHTMLtoPDF for creating PDF/UA compliant PDFs from HTML.
-
-## Advice
-
-- Avoid `display: inline-block` whenever possible.
-- Whitespaces are considered sensitive.
-- Changing the CSS display value for `li` elements causes errors.
-- Using the CSS property `column-count` causes errors.
-- Using `position: absolute` or `float` messes up the reading order.
-- The best way to position content is by using margins _(negative or positive)_.
-- Don't rely solely on automatic tests, remember to manually ensure that the structure and order of your PDF makes sense.
