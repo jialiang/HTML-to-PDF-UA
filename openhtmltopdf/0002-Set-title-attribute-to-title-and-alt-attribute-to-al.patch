@@ -1,7 +1,7 @@
 From 178dd7365198f2d9214324a18778a63f2559d3a8 Mon Sep 17 00:00:00 2001
 From: Jia Liang <hojialiang@protonmail.com>
 Date: Thu, 14 Dec 2023 13:55:34 +0800
-Subject: [PATCH 2/2] Set title attribute to title and alt attribute to alt
+Subject: [PATCH 2/3] Set title attribute to title and alt attribute to alt
 
 ---
  .../pdfboxout/PdfBoxAccessibilityHelper.java         | 12 +++++++++++-

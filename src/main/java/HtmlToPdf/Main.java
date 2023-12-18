@@ -10,6 +10,7 @@ import java.nio.file.Paths;
 import java.util.List;
 
 import com.openhtmltopdf.pdfboxout.PdfRendererBuilder;
+import com.openhtmltopdf.pdfboxout.PdfRendererBuilder.PdfAConformance;
 
 import org.apache.pdfbox.io.IOUtils;
 import org.jsoup.Jsoup;
@@ -24,6 +25,12 @@ public class Main {
       return;
     }
 
+    PdfAConformance pdfaLevel = PdfAConformance.PDFA_3_A;
+
+    if (args.length >= 2 && args[1].equals("pdf/a-4")) {
+      pdfaLevel = PdfAConformance.PDFA_4_A;
+    }
+
     File inFile = new File(args[0]);
     String in = inFile.getAbsolutePath();
 
@@ -36,7 +43,7 @@ public class Main {
     System.out.println("Start");
 
     try {
-      generate(in, out);
+      generate(in, out, pdfaLevel);
     } catch (Exception e) {
       System.out.println("Error");
       e.printStackTrace();
@@ -45,7 +52,7 @@ public class Main {
     System.out.println("Finish");
   }
 
-  public static void generate(String in, String out) throws Exception {
+  public static void generate(String in, String out, PdfAConformance pdfaLevel) throws Exception {
     try (FileOutputStream os = new FileOutputStream(out)) {
       Path inPath = Paths.get(in);
 
@@ -64,7 +71,7 @@ public class Main {
 
       builder.useFastMode();
       builder.usePdfUaAccessbility(true);
-      builder.usePdfAConformance(PdfRendererBuilder.PdfAConformance.PDFA_3_A);
+      builder.usePdfAConformance(pdfaLevel);
       builder.withW3cDocument(w3cDoc, folderPathString);
 
       try (InputStream colorProfile = Main.class.getResourceAsStream("/colorspaces/sRGB.icc")) {
