@@ -1,7 +1,7 @@
 From ebab743b7753227bec2cf0f27f436a703d041439 Mon Sep 17 00:00:00 2001
 From: Jia Liang <hojialiang@protonmail.com>
 Date: Mon, 22 Jun 2026 01:04:07 +0800
-Subject: [PATCH 2/2] Add PDF/A-4 conformance support
+Subject: [PATCH 2/3] Add PDF/A-4 conformance support
 
 ---
  .../pdfboxout/PdfBoxRenderer.java             | 30 ++++++++++++++-----
