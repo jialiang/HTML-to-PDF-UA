@@ -1,26 +1,18 @@
-From e855429d3259d19a0784372a1a12f61bf6e832e8 Mon Sep 17 00:00:00 2001
+From ebab743b7753227bec2cf0f27f436a703d041439 Mon Sep 17 00:00:00 2001
 From: Jia Liang <hojialiang@protonmail.com>
-Date: Mon, 18 Dec 2023 01:02:54 +0800
-Subject: [PATCH 3/3] Add support for PDF/A-4A
+Date: Mon, 22 Jun 2026 01:04:07 +0800
+Subject: [PATCH 2/2] Add PDF/A-4 conformance support
 
 ---
- .../pdfboxout/PdfBoxRenderer.java             | 29 ++++++++++++++-----
+ .../pdfboxout/PdfBoxRenderer.java             | 30 ++++++++++++++-----
  .../pdfboxout/PdfRendererBuilder.java         |  3 +-
- 2 files changed, 23 insertions(+), 9 deletions(-)
+ 2 files changed, 25 insertions(+), 8 deletions(-)
 
 diff --git a/openhtmltopdf-pdfbox/src/main/java/com/openhtmltopdf/pdfboxout/PdfBoxRenderer.java b/openhtmltopdf-pdfbox/src/main/java/com/openhtmltopdf/pdfboxout/PdfBoxRenderer.java
-index fa339f3a..40aa6e07 100644
+index c9f8a1f..ec31640 100644
 --- a/openhtmltopdf-pdfbox/src/main/java/com/openhtmltopdf/pdfboxout/PdfBoxRenderer.java
 +++ b/openhtmltopdf-pdfbox/src/main/java/com/openhtmltopdf/pdfboxout/PdfBoxRenderer.java
-@@ -34,7 +34,6 @@ import com.openhtmltopdf.layout.SharedContext;
- import com.openhtmltopdf.outputdevice.helper.BaseDocument;
- import com.openhtmltopdf.outputdevice.helper.ExternalResourceControlPriority;
- import com.openhtmltopdf.outputdevice.helper.ExternalResourceType;
--import com.openhtmltopdf.extend.FSDOMMutator;
- import com.openhtmltopdf.outputdevice.helper.PageDimensions;
- import com.openhtmltopdf.outputdevice.helper.UnicodeImplementation;
- import com.openhtmltopdf.pdfboxout.PdfBoxUtil.Metadata;
-@@ -79,6 +78,7 @@ import java.awt.*;
+@@ -79,6 +79,7 @@ import java.awt.*;
  import java.awt.geom.Rectangle2D;
  import java.io.*;
  import java.nio.charset.StandardCharsets;
@@ -28,21 +20,11 @@ index fa339f3a..40aa6e07 100644
  import java.util.ArrayList;
  import java.util.Arrays;
  import java.util.Calendar;
-@@ -542,6 +542,8 @@ public class PdfBoxRenderer implements Closeable, PageSupplier {
-         _outputDevice.setRoot(_root);
-         _outputDevice.start(_doc);
- 
-+        doc.getDocument().setVersion(getPDFVersion());
-+
-         _root.getLayer().assignPagePaintingPositions(c, Layer.PAGED_MODE_PRINT);
- 
-         int pageCount = _root.getLayer().getPages().size();
-@@ -568,10 +570,11 @@ public class PdfBoxRenderer implements Closeable, PageSupplier {
+@@ -576,12 +577,16 @@ public class PdfBoxRenderer implements Closeable, PageSupplier {
              try (PDPageContentStream cs = initPage(doc, nextW, nextH, i, -1)) {
                  if (i == 0) {
                      firePreWrite(pageCount); // opportunity to adjust meta data
 -                    setDidValues(doc);       // set PDF header fields from meta data
-+                    
 +                    PDDocumentInformation info = setDidValues(doc); // set PDF header fields from meta data
  
                      if (_pdfUaConformance || _pdfAConformance != PdfAConformance.NONE) {
@@ -50,8 +32,14 @@ index fa339f3a..40aa6e07 100644
 +                        addPdfASchema(doc, info, _pdfAConformance, _pdfUaConformance);
                      }
  
++                    // PDF/A-4 (clause 6.1.2) requires the file header itself to read %PDF-2.0;
++                    // PDDocument.setVersion only updates the catalog, so set it on the COSDocument.
++                    doc.getDocument().setVersion(getPDFVersion());
++
                      DisplayListCollector dlCollector = new DisplayListCollector(_root.getLayer().getPages());
-@@ -649,8 +652,7 @@ public class PdfBoxRenderer implements Closeable, PageSupplier {
+                     dlPages = dlCollector.collectRoot(c, _root.getLayer());
+                 }
+@@ -657,8 +662,7 @@ public class PdfBoxRenderer implements Closeable, PageSupplier {
  
      // Kindly provided by GurpusMaximus at:
      // https://stackoverflow.com/questions/49682339/how-can-i-create-an-accessible-pdf-with-java-pdfbox-2-0-8-library-that-is-also-v
@@ -61,10 +49,10 @@ index fa339f3a..40aa6e07 100644
          XMPMetadata metadata = XMPMetadata.createXMPMetadata();
  
          try {
-@@ -671,8 +673,13 @@ public class PdfBoxRenderer implements Closeable, PageSupplier {
+@@ -679,8 +683,14 @@ public class PdfBoxRenderer implements Closeable, PageSupplier {
  
              if (pdfAConformance != PdfAConformance.NONE) {
-                 PDFAIdentificationSchema pdfaid = metadata.createAndAddPFAIdentificationSchema();
+                 PDFAIdentificationSchema pdfaid = metadata.createAndAddPDFAIdentificationSchema();
 -                pdfaid.setConformance(pdfAConformance.getConformanceValue());
 +
 +                if (pdfAConformance != PdfAConformance.PDFA_4_A) {
@@ -72,11 +60,12 @@ index fa339f3a..40aa6e07 100644
 +                }
 +
                  pdfaid.setPart(pdfAConformance.getPart());
-+                pdfaid.addProperty(pdfaid.getMetadata().getTypeMapping().createInteger(pdfaid.getNamespace(), pdfaid.getPrefix(), "rev", Year.now().getValue()));
++                int pdfaRev = pdfAConformance == PdfAConformance.PDFA_4_A ? 2020 : Year.now().getValue();
++                pdfaid.addProperty(pdfaid.getMetadata().getTypeMapping().createInteger(pdfaid.getNamespace(), pdfaid.getPrefix(), "rev", pdfaRev));
  
                  AdobePDFSchema pdfSchema = metadata.createAndAddAdobePDFSchema();
                  pdfSchema.setPDFVersion(String.valueOf(pdfAConformance.getPdfVersion()));
-@@ -736,6 +743,8 @@ public class PdfBoxRenderer implements Closeable, PageSupplier {
+@@ -744,6 +754,8 @@ public class PdfBoxRenderer implements Closeable, PageSupplier {
                          createPdfaProperty("internal", "Part of PDF/A standard", "part", "Integer"));
                  pdfaidProperties.add(
                          createPdfaProperty("internal", "Conformance level of PDF/A standard", "conformance", "Text"));
@@ -85,7 +74,7 @@ index fa339f3a..40aa6e07 100644
                  pdfAExt.addBagValue("schemas",
                          createPdfaSchema("PDF/A ID Schema", "http://www.aiim.org/pdfa/ns/id/", "pdfaid", pdfaidProperties));
              }
-@@ -819,7 +828,7 @@ public class PdfBoxRenderer implements Closeable, PageSupplier {
+@@ -827,7 +839,7 @@ public class PdfBoxRenderer implements Closeable, PageSupplier {
      /**
       * Sets the document information dictionary values from html metadata
       */
@@ -94,7 +83,7 @@ index fa339f3a..40aa6e07 100644
          PDDocumentInformation info = new PDDocumentInformation();
  
          info.setCreationDate(Calendar.getInstance());
-@@ -849,7 +858,11 @@ public class PdfBoxRenderer implements Closeable, PageSupplier {
+@@ -857,7 +869,11 @@ public class PdfBoxRenderer implements Closeable, PageSupplier {
                  info.setCustomMetadataValue(name,content);
          }
  
@@ -108,19 +97,19 @@ index fa339f3a..40aa6e07 100644
      
      private void paintPageFast(RenderingContext c, PageBox page, DisplayListPageContainer pageOperations, int additionalTranslateX) {
 diff --git a/openhtmltopdf-pdfbox/src/main/java/com/openhtmltopdf/pdfboxout/PdfRendererBuilder.java b/openhtmltopdf-pdfbox/src/main/java/com/openhtmltopdf/pdfboxout/PdfRendererBuilder.java
-index 59558337..295cef5e 100644
+index 7fb0bb9..4911cab 100644
 --- a/openhtmltopdf-pdfbox/src/main/java/com/openhtmltopdf/pdfboxout/PdfRendererBuilder.java
 +++ b/openhtmltopdf-pdfbox/src/main/java/com/openhtmltopdf/pdfboxout/PdfRendererBuilder.java
-@@ -295,7 +295,8 @@ public class PdfRendererBuilder extends BaseRendererBuilder<PdfRendererBuilder,
- 		NONE(-1, "", 0f),
- 		PDFA_1_A(1, "A", 1.4f), PDFA_1_B(1, "B", 1.4f),
- 		PDFA_2_A(2, "A", 1.7f), PDFA_2_B(2, "B", 1.7f), PDFA_2_U(2, "U", 1.7f),
--		PDFA_3_A(3, "A", 1.7f), PDFA_3_B(3, "B", 1.7f), PDFA_3_U(3, "U", 1.7f);
-+		PDFA_3_A(3, "A", 1.7f), PDFA_3_B(3, "B", 1.7f), PDFA_3_U(3, "U", 1.7f),
-+		PDFA_4_A(4, "A", 2.0f);
+@@ -323,7 +323,8 @@ public class PdfRendererBuilder extends BaseRendererBuilder<PdfRendererBuilder,
+         NONE(-1, "", 0f),
+         PDFA_1_A(1, "A", 1.4f), PDFA_1_B(1, "B", 1.4f),
+         PDFA_2_A(2, "A", 1.7f), PDFA_2_B(2, "B", 1.7f), PDFA_2_U(2, "U", 1.7f),
+-        PDFA_3_A(3, "A", 1.7f), PDFA_3_B(3, "B", 1.7f), PDFA_3_U(3, "U", 1.7f);
++        PDFA_3_A(3, "A", 1.7f), PDFA_3_B(3, "B", 1.7f), PDFA_3_U(3, "U", 1.7f),
++        PDFA_4_A(4, "A", 2.0f);
  
- 		PdfAConformance(int part, String value, float pdfVersion) {
- 			this.part = part;
+         PdfAConformance(int part, String value, float pdfVersion) {
+             this.part = part;
 -- 
-2.43.0.windows.1
+2.54.0
 

@@ -1,6 +1,6 @@
 # HTML-to-PDF-UA
 
-Java App to generate PDF/UA and PDF/A-3A compliant PDFs from HTML using the [OpenHTMLtoPDF](https://github.com/danfickle/openhtmltopdf) library.
+Java App to generate PDF/UA and PDF/A-3A compliant PDFs from HTML using the community-maintained [OpenHTMLtoPDF](https://github.com/openhtmltopdf/openhtmltopdf) library.
 
 PDF/UA is a set of requirements for universally-accessible PDF documents. You can refer to the document [PDF/UA in a Nutshell](https://github.com/jialiang/HTML-to-PDF-UA/blob/master/PDFUA-in-a-Nutshell-PDFUA.pdf) published by the PDF association to learn more about PDF/UA.
 
@@ -59,25 +59,25 @@ You can download the compiled Java app from the [Releases page](https://github.c
 
 - Ensure that all links contain a `title` attribute to describe the link.
 - Run `java -jar html-to-pdf-ua.jar "path/to/your/html/file"` on your console.
-- Append `pdf/a-4` to the command to use PDF/A-4 standards instead of PDF/A-3a.
+- Append `pdf/a-4` to the command to use PDF/A-4 standards instead of PDF/A-3a. PDF/A-4 is based on PDF 2.0, so the output is valid PDF/A-4 but cannot also be PDF/UA-1 compliant (which requires a PDF 1.x header).
 - A file called `output.pdf` will be generated in the same folder as your HTML file.
 
 ## Compilation
 
 Make sure you have a Java Development Kit _(21 and above)_ and Apache Maven installed.
 
-I used a slightly modified copy of OpenHTMLtoPDF's `master` branch _(version `1.0.11-SNAPSHOT`)_, not a tagged release. The PDFs created using the official OpenHTMLtoPDF library were violating [Clause: 7.18.5 of PDF/UA](https://github.com/veraPDF/veraPDF-validation-profiles/wiki/PDFUA-Part-1-rules#rule-7185-2).
+I used a slightly modified copy of the [OpenHTMLtoPDF fork](https://github.com/openhtmltopdf/openhtmltopdf) _(version `1.1.37`)_.
 
-- Clone OpenHTMLtoPDF and check out the patched base commit:
+- Clone the OpenHTMLtoPDF fork and check out the pinned release:
 
   ```
-  git clone https://github.com/danfickle/openhtmltopdf.git
+  git clone https://github.com/openhtmltopdf/openhtmltopdf.git
   cd openhtmltopdf
-  git checkout 780ba564
+  git checkout 1.1.37
   ```
 
-- Copy the [patches](https://github.com/jialiang/HTML-to-PDF-UA/tree/master/openhtmltopdf/) into the folder and apply them by doing `git am *.patch`.
-- Run `mvn clean install` to compile, test, package and install it into your local Maven repository.
+- Apply the [patches](https://github.com/jialiang/HTML-to-PDF-UA/tree/master/openhtmltopdf/) by doing `git am /path/to/patches/*.patch`.
+- Run `mvn clean install -DskipTests -Drevision=1.1.37` to compile, package and install it into your local Maven repository.
 - Clone this repository.
 - Run `mvn clean package` to compile, test and package this project.
 
