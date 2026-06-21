@@ -21,7 +21,7 @@ You can download the compiled Java app from the [Releases page](https://github.c
 ## Usage
 
 - Make sure you have Java installed.
-- In the same folder as the HTML file you want to convert, create a folder called "fonts". This folder must contain all the fonts used by the HTML in TrueType _(.ttf)_ format _(even the ones installed locally on your PC needs to be included)_. It uses the font name reported by the font file; It checks if the filename contains certain keywords to determine the font weight _(e.g. thin, extra-light, light, regular, medium, semi-bold, bold, extra-bold, black)_ and font style _(e.g. italic)_.
+- In the same folder as the HTML file you want to convert, create a folder called "fonts". This folder must contain all the fonts used by the HTML in TrueType _(.ttf)_ format _(even the ones installed locally on your PC need to be included)_. It uses the font name reported by the font file; it checks if the filename contains certain keywords to determine the font weight _(e.g. thin, extra-light, light, regular, medium, semi-bold, bold, extra-bold, black)_ and font style _(e.g. italic)_.
 - Make sure to set the page size and margins of the generated PDF by including this style block in your HTML file:
 
   ```
@@ -66,11 +66,16 @@ You can download the compiled Java app from the [Releases page](https://github.c
 
 Make sure you have a Java Development Kit _(21 and above)_ and Apache Maven installed.
 
-I used a slightly modified copy of OpenHTMLtoPDF 1.0.10 _(the latest version at the time of writing)_. The PDFs created using the official OpenHTMLtoPDF 1.0.10 library were violating [Clause: 7.18.5 of PDF/UA](https://github.com/veraPDF/veraPDF-validation-profiles/wiki/PDFUA-Part-1-rules#rule-7185-2).
+I used a slightly modified copy of OpenHTMLtoPDF's `master` branch _(version `1.0.11-SNAPSHOT`)_, not a tagged release. The PDFs created using the official OpenHTMLtoPDF library were violating [Clause: 7.18.5 of PDF/UA](https://github.com/veraPDF/veraPDF-validation-profiles/wiki/PDFUA-Part-1-rules#rule-7185-2).
 
-- Download the source code for [OpenHTMLtoPDF 1.0.10](https://github.com/danfickle/openhtmltopdf/releases/tag/openhtmltopdf-parent-1.0.10) (Later versions might work too).
-- Extract it and open your console in the created folder.
-- Do `git init`.
+- Clone OpenHTMLtoPDF and check out the patched base commit:
+
+  ```
+  git clone https://github.com/danfickle/openhtmltopdf.git
+  cd openhtmltopdf
+  git checkout 780ba564
+  ```
+
 - Copy the [patches](https://github.com/jialiang/HTML-to-PDF-UA/tree/master/openhtmltopdf/) into the folder and apply them by doing `git am *.patch`.
 - Run `mvn clean install` to compile, test, package and install it into your local Maven repository.
 - Clone this repository.
