@@ -5,7 +5,7 @@
     <groupId>org.springframework</groupId>
     <artifactId>html-to-pdf-ua</artifactId>
     <packaging>jar</packaging>
-    <version>1.2.0</version>
+    <version>1.3.0</version>
 
     <properties>
         <maven.compiler.source>21</maven.compiler.source>

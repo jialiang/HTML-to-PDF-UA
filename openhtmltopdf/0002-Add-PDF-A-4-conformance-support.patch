@@ -1,7 +1,7 @@
 From ebab743b7753227bec2cf0f27f436a703d041439 Mon Sep 17 00:00:00 2001
 From: Jia Liang <hojialiang@protonmail.com>
 Date: Mon, 22 Jun 2026 01:04:07 +0800
-Subject: [PATCH 2/3] Add PDF/A-4 conformance support
+Subject: [PATCH 2/5] Add PDF/A-4 conformance support
 
 ---
  .../pdfboxout/PdfBoxRenderer.java             | 30 ++++++++++++++-----
@@ -9,7 +9,7 @@ Subject: [PATCH 2/3] Add PDF/A-4 conformance support
  2 files changed, 25 insertions(+), 8 deletions(-)
 
 diff --git a/openhtmltopdf-pdfbox/src/main/java/com/openhtmltopdf/pdfboxout/PdfBoxRenderer.java b/openhtmltopdf-pdfbox/src/main/java/com/openhtmltopdf/pdfboxout/PdfBoxRenderer.java
-index c9f8a1f..ec31640 100644
+index c9f8a1f8..ec316406 100644
 --- a/openhtmltopdf-pdfbox/src/main/java/com/openhtmltopdf/pdfboxout/PdfBoxRenderer.java
 +++ b/openhtmltopdf-pdfbox/src/main/java/com/openhtmltopdf/pdfboxout/PdfBoxRenderer.java
 @@ -79,6 +79,7 @@ import java.awt.*;
@@ -97,7 +97,7 @@ index c9f8a1f..ec31640 100644
      
      private void paintPageFast(RenderingContext c, PageBox page, DisplayListPageContainer pageOperations, int additionalTranslateX) {
 diff --git a/openhtmltopdf-pdfbox/src/main/java/com/openhtmltopdf/pdfboxout/PdfRendererBuilder.java b/openhtmltopdf-pdfbox/src/main/java/com/openhtmltopdf/pdfboxout/PdfRendererBuilder.java
-index 7fb0bb9..4911cab 100644
+index 7fb0bb9e..4911cabc 100644
 --- a/openhtmltopdf-pdfbox/src/main/java/com/openhtmltopdf/pdfboxout/PdfRendererBuilder.java
 +++ b/openhtmltopdf-pdfbox/src/main/java/com/openhtmltopdf/pdfboxout/PdfRendererBuilder.java
 @@ -323,7 +323,8 @@ public class PdfRendererBuilder extends BaseRendererBuilder<PdfRendererBuilder,

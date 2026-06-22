@@ -1,0 +1,394 @@
+From 91029c8320dbfc8edb988c42dba440e6fa19ce61 Mon Sep 17 00:00:00 2001
+From: Jia Liang <hojialiang@protonmail.com>
+Date: Tue, 23 Jun 2026 03:13:55 +0800
+Subject: [PATCH 4/5] Add PDF/UA-2 conformance support
+
+---
+ .../pdfboxout/PdfBoxAccessibilityHelper.java  | 87 ++++++++++++++++++-
+ .../pdfboxout/PdfBoxBookmarkManager.java      | 51 ++++++++++-
+ .../pdfboxout/PdfBoxFastOutputDevice.java     | 16 +++-
+ .../pdfboxout/PdfBoxRenderer.java             | 35 ++++++--
+ .../pdfboxout/PdfRendererBuilder.java         | 17 ++++
+ .../pdfboxout/PdfRendererBuilderState.java    |  1 +
+ 6 files changed, 187 insertions(+), 20 deletions(-)
+
+diff --git a/openhtmltopdf-pdfbox/src/main/java/com/openhtmltopdf/pdfboxout/PdfBoxAccessibilityHelper.java b/openhtmltopdf-pdfbox/src/main/java/com/openhtmltopdf/pdfboxout/PdfBoxAccessibilityHelper.java
+index d9de8448..cbdd2cfe 100644
+--- a/openhtmltopdf-pdfbox/src/main/java/com/openhtmltopdf/pdfboxout/PdfBoxAccessibilityHelper.java
++++ b/openhtmltopdf-pdfbox/src/main/java/com/openhtmltopdf/pdfboxout/PdfBoxAccessibilityHelper.java
+@@ -46,6 +46,12 @@ public class PdfBoxAccessibilityHelper {
+     private final Box _rootBox;
+     private final Document _doc;
+     private final GenericStructualElement _root;
++    private final int _pdfUaVersion;
++
++    // ISO 32000-2 / ISO 32005 standard structure namespace (PDF 2.0).
++    private static final String PDF2_STRUCTURE_NAMESPACE = "http://iso.org/pdf2/ssn";
++    // The /NS key, set both on the namespace dictionary and on each structure element.
++    private static final COSName NS = COSName.getPDFName("NS");
+ 
+     private static final Map<String, Supplier<AbstractStructualElement>> _tagSuppliers = createTagSuppliers();
+ 
+@@ -81,9 +87,14 @@ public class PdfBoxAccessibilityHelper {
+     }
+ 
+     public PdfBoxAccessibilityHelper(PdfBoxFastOutputDevice od, Box root, Document doc) {
++        this(od, root, doc, 1);
++    }
++
++    public PdfBoxAccessibilityHelper(PdfBoxFastOutputDevice od, Box root, Document doc, int pdfUaVersion) {
+         this._od = od;
+         this._rootBox = root;
+         this._doc = doc;
++        this._pdfUaVersion = pdfUaVersion;
+         this._root = new GenericStructualElement();
+         this._root.box = root;
+         root.setAccessiblityObject(this._root);
+@@ -799,11 +810,26 @@ public class PdfBoxAccessibilityHelper {
+      * Given a box, gets its structual element.
+      */
+     public static PDStructureElement getStructualElementForBox(Box targetBox) {
+-        if (targetBox != null &&
+-            targetBox.getAccessibilityObject() != null &&
+-            targetBox.getAccessibilityObject() instanceof AbstractStructualElement) {
++        if (targetBox == null) {
++            return null;
++        }
+ 
+-            return ((AbstractStructualElement) targetBox.getAccessibilityObject()).elem;
++        if (targetBox.getAccessibilityObject() instanceof AbstractStructualElement) {
++            PDStructureElement elem = ((AbstractStructualElement) targetBox.getAccessibilityObject()).elem;
++            if (elem != null) {
++                return elem;
++            }
++        }
++
++        // The box itself may have been skipped or merged when the structure tree was
++        // built (so it has no element of its own). Fall back to the first descendant
++        // that does carry one -- this keeps bookmark/link destinations resolvable as
++        // structure destinations, which PDF/UA-2 (ISO 14289-2, 8.8) requires.
++        for (int i = 0; i < targetBox.getChildCount(); i++) {
++            PDStructureElement childElem = getStructualElementForBox(targetBox.getChild(i));
++            if (childElem != null) {
++                return childElem;
++            }
+         }
+ 
+         return null;
+@@ -831,6 +857,11 @@ public class PdfBoxAccessibilityHelper {
+             roleMap.put("Underline", "Span");
+             root.setRoleMap(roleMap);
+ 
++            // PDF/UA-2 (ISO 14289-2): declare the PDF 2.0 standard structure namespace
++            // on the tree root. This is additive -- the flat role map above is retained,
++            // so UA-1 consumers (which ignore the /NS entry) still read the same tags.
++            COSDictionary structureNamespace = createPdf2StructureNamespace(root);
++
+             PDStructureElement rootElem = new PDStructureElement(StandardStructureTypes.DOCUMENT, null);
+ 
+             String lang = _doc.getDocumentElement().getAttribute("lang");
+@@ -841,10 +872,58 @@ public class PdfBoxAccessibilityHelper {
+             _root.elem = rootElem;
+             finishTreeItems(_root.children, _root);
+ 
++            // Associate every structure element with the PDF 2.0 namespace. Done as a
++            // post-pass over the finished tree so it covers all element creation paths.
++            if (structureNamespace != null) {
++                applyStructureNamespace(rootElem, structureNamespace);
++            }
++
+             _od.getWriter().getDocumentCatalog().setStructureTreeRoot(root);
+         }
+     }
+ 
++    /**
++     * Creates the PDF 2.0 standard structure namespace dictionary and registers it in
++     * the structure tree root's /Namespaces array. Returns null for PDF/UA-1, where no
++     * namespace is used. The returned dictionary is shared by reference, so PDFBox writes
++     * it as a single indirect object that every /NS entry then references.
++     */
++    private COSDictionary createPdf2StructureNamespace(PDStructureTreeRoot root) {
++        if (_pdfUaVersion < 2) {
++            return null;
++        }
++
++        COSDictionary namespace = new COSDictionary();
++        namespace.setItem(COSName.TYPE, COSName.getPDFName("Namespace"));
++        namespace.setString(NS, PDF2_STRUCTURE_NAMESPACE);
++
++        COSArray namespaces = new COSArray();
++        namespaces.add(namespace);
++        root.getCOSObject().setItem(COSName.getPDFName("Namespaces"), namespaces);
++
++        return namespace;
++    }
++
++    /**
++     * Recursively sets /NS on a structure element and all of its structure-element
++     * descendants. Non-structure kids (marked content, object references, mcids) are
++     * skipped.
++     */
++    private void applyStructureNamespace(PDStructureElement elem, COSDictionary namespace) {
++        elem.getCOSObject().setItem(NS, namespace);
++
++        List<Object> kids = elem.getKids();
++        if (kids == null) {
++            return;
++        }
++
++        for (Object kid : kids) {
++            if (kid instanceof PDStructureElement) {
++                applyStructureNamespace((PDStructureElement) kid, namespace);
++            }
++        }
++    }
++
+     public void finishNumberTree() {
+         COSArray numTree = new COSArray();
+         int i = 0;
+diff --git a/openhtmltopdf-pdfbox/src/main/java/com/openhtmltopdf/pdfboxout/PdfBoxBookmarkManager.java b/openhtmltopdf-pdfbox/src/main/java/com/openhtmltopdf/pdfboxout/PdfBoxBookmarkManager.java
+index 9105d05b..972584a5 100644
+--- a/openhtmltopdf-pdfbox/src/main/java/com/openhtmltopdf/pdfboxout/PdfBoxBookmarkManager.java
++++ b/openhtmltopdf-pdfbox/src/main/java/com/openhtmltopdf/pdfboxout/PdfBoxBookmarkManager.java
+@@ -7,6 +7,11 @@ import java.util.List;
+ import java.util.logging.Level;
+ 
+ import com.openhtmltopdf.util.LogMessageId;
++import org.apache.pdfbox.cos.COSArray;
++import org.apache.pdfbox.cos.COSFloat;
++import org.apache.pdfbox.cos.COSInteger;
++import org.apache.pdfbox.cos.COSName;
++import org.apache.pdfbox.cos.COSNull;
+ import org.apache.pdfbox.pdmodel.PDDocument;
+ import org.apache.pdfbox.pdmodel.documentinterchange.logicalstructure.PDStructureElement;
+ import org.apache.pdfbox.pdmodel.interactive.documentnavigation.destination.PDDestination;
+@@ -85,18 +90,56 @@ public class PdfBoxBookmarkManager {
+         }
+ 
+         PDOutlineItem outline = new PDOutlineItem();
+-        outline.setDestination(target == null ? _defaultDestination : target);
+         outline.setTitle(bookmark.getName());
+-        
++
+         PDStructureElement se = PdfBoxAccessibilityHelper.getStructualElementForBox(box);
+-        if (se != null) {
++
++        if (_od.getPdfUaVersion() >= 2 && se != null) {
++            // PDF/UA-2 (ISO 14289-2, 8.8): every destination targeting the current document
++            // must be a structure destination. The same array serves as /Dest (the structure
++            // destination form is valid there) and /SD (the PDF 2.0 preferred key).
++            COSArray structureDestination = createStructureDestination(se, target);
++            outline.getCOSObject().setItem(COSName.DEST, structureDestination);
++            outline.getCOSObject().setItem(COSName.getPDFName("SD"), structureDestination);
+             outline.setStructureElement(se);
++        } else {
++            outline.setDestination(target == null ? _defaultDestination : target);
++            if (se != null) {
++                outline.setStructureElement(se);
++            }
+         }
+-        
++
+         parent.addLast(outline);
+         writeBookmarks(c, root, outline, bookmark.getChildren());
+     }
+ 
++    /**
++     * Builds a PDF 2.0 structure destination array referencing the given structure element.
++     * With a page destination it mirrors its coordinates (<code>[structElem /XYZ left top zoom]</code>);
++     * without one it falls back to <code>[structElem /Fit]</code>.
++     */
++    private static COSArray createStructureDestination(PDStructureElement se, PDPageXYZDestination pageDest) {
++        COSArray sd = new COSArray();
++        sd.add(se.getCOSObject());
++
++        if (pageDest == null) {
++            sd.add(COSName.getPDFName("Fit"));
++            return sd;
++        }
++
++        sd.add(COSName.getPDFName("XYZ"));
++
++        int left = pageDest.getLeft();
++        int top = pageDest.getTop();
++        float zoom = pageDest.getZoom();
++
++        sd.add(left >= 0 ? COSInteger.get(left) : COSNull.NULL);
++        sd.add(top >= 0 ? COSInteger.get(top) : COSNull.NULL);
++        sd.add(zoom > 0 ? new COSFloat(zoom) : COSNull.NULL);
++
++        return sd;
++    }
++
+     /**
+      * Creates a <code>PDPageXYZDestination</code> with the Y set to the min Y of the border box and 
+      * the X and Z set to null. Takes into account any transforms set for the box as well as inserted overflow pages.
+diff --git a/openhtmltopdf-pdfbox/src/main/java/com/openhtmltopdf/pdfboxout/PdfBoxFastOutputDevice.java b/openhtmltopdf-pdfbox/src/main/java/com/openhtmltopdf/pdfboxout/PdfBoxFastOutputDevice.java
+index 3e176a31..43347d99 100644
+--- a/openhtmltopdf-pdfbox/src/main/java/com/openhtmltopdf/pdfboxout/PdfBoxFastOutputDevice.java
++++ b/openhtmltopdf-pdfbox/src/main/java/com/openhtmltopdf/pdfboxout/PdfBoxFastOutputDevice.java
+@@ -198,16 +198,26 @@ public class PdfBoxFastOutputDevice extends AbstractOutputDevice implements Outp
+     // If we are attempting to be PDF/UA compliant (ie tagged pdf), a helper, otherwise null.
+     private PdfBoxAccessibilityHelper _pdfUa;
+     private final boolean _pdfUaConform;
+-    
++    private final int _pdfUaVersion;
++
+     private final boolean _pdfAConform;
+-    
++
+     public PdfBoxFastOutputDevice(float dotsPerPoint, boolean testMode, boolean pdfUaConform, boolean pdfAConform) {
++        this(dotsPerPoint, testMode, pdfUaConform, 1, pdfAConform);
++    }
++
++    public PdfBoxFastOutputDevice(float dotsPerPoint, boolean testMode, boolean pdfUaConform, int pdfUaVersion, boolean pdfAConform) {
+         _dotsPerPoint = dotsPerPoint;
+         _testMode = testMode;
+         _pdfUaConform = pdfUaConform;
++        _pdfUaVersion = pdfUaVersion;
+         _pdfAConform = pdfAConform;
+     }
+ 
++    public int getPdfUaVersion() {
++        return _pdfUaVersion;
++    }
++
+     @Override
+     public void setWriter(PDDocument writer) {
+         _writer = writer;
+@@ -892,7 +902,7 @@ public class PdfBoxFastOutputDevice extends AbstractOutputDevice implements Outp
+         loadMetadata(doc);
+         
+         if (_pdfUaConform) {
+-            _pdfUa = new PdfBoxAccessibilityHelper(this, _root, doc);
++            _pdfUa = new PdfBoxAccessibilityHelper(this, _root, doc, _pdfUaVersion);
+         }
+     }
+ 
+diff --git a/openhtmltopdf-pdfbox/src/main/java/com/openhtmltopdf/pdfboxout/PdfBoxRenderer.java b/openhtmltopdf-pdfbox/src/main/java/com/openhtmltopdf/pdfboxout/PdfBoxRenderer.java
+index ec316406..f1839111 100644
+--- a/openhtmltopdf-pdfbox/src/main/java/com/openhtmltopdf/pdfboxout/PdfBoxRenderer.java
++++ b/openhtmltopdf-pdfbox/src/main/java/com/openhtmltopdf/pdfboxout/PdfBoxRenderer.java
+@@ -118,6 +118,7 @@ public class PdfBoxRenderer implements Closeable, PageSupplier {
+ 
+     private PdfAConformance _pdfAConformance;
+     private boolean _pdfUaConformance;
++    private int _pdfUaVersion = 1;
+ 
+     private byte[] _colorProfile;
+ 
+@@ -170,15 +171,17 @@ public class PdfBoxRenderer implements Closeable, PageSupplier {
+ 
+             _pdfAConformance = state._pdfAConformance;
+             _pdfUaConformance = state._pdfUaConform;
++            _pdfUaVersion = state._pdfUaVersion;
+             _colorProfile = state._colorProfile;
+ 
+             _hyphenator = state._hyphenator;
+ 
+             _dotsPerPoint = DEFAULT_DOTS_PER_POINT;
+             _testMode = state._testMode;
+-            _outputDevice = 
++            _outputDevice =
+                     new PdfBoxFastOutputDevice(DEFAULT_DOTS_PER_POINT, _testMode,
+                             state._pdfUaConform || state._pdfAConformance.getConformanceValue().equals("A"),
++                            state._pdfUaVersion,
+                             state._pdfAConformance != PdfAConformance.NONE);
+             _outputDevice.setWriter(_pdfDoc);
+             _outputDevice.setStartPageNo(_pdfDoc.getNumberOfPages());
+@@ -580,7 +583,7 @@ public class PdfBoxRenderer implements Closeable, PageSupplier {
+                     PDDocumentInformation info = setDidValues(doc); // set PDF header fields from meta data
+ 
+                     if (_pdfUaConformance || _pdfAConformance != PdfAConformance.NONE) {
+-                        addPdfASchema(doc, info, _pdfAConformance, _pdfUaConformance);
++                        addPdfASchema(doc, info, _pdfAConformance, _pdfUaConformance, _pdfUaVersion);
+                     }
+ 
+                     // PDF/A-4 (clause 6.1.2) requires the file header itself to read %PDF-2.0;
+@@ -662,7 +665,7 @@ public class PdfBoxRenderer implements Closeable, PageSupplier {
+ 
+     // Kindly provided by GurpusMaximus at:
+     // https://stackoverflow.com/questions/49682339/how-can-i-create-an-accessible-pdf-with-java-pdfbox-2-0-8-library-that-is-also-v
+-    private void addPdfASchema(PDDocument document, PDDocumentInformation information, PdfAConformance pdfAConformance, boolean isPdfUa) {
++    private void addPdfASchema(PDDocument document, PDDocumentInformation information, PdfAConformance pdfAConformance, boolean isPdfUa, int pdfUaVersion) {
+         XMPMetadata metadata = XMPMetadata.createXMPMetadata();
+ 
+         try {
+@@ -762,14 +765,28 @@ public class PdfBoxRenderer implements Closeable, PageSupplier {
+ 
+             if (isPdfUa) {
+                 // Description of PDF/UA
+-                List<XMPSchema> pdfUaProperties = new ArrayList<>(1);
+-                pdfUaProperties.add(
+-                        createPdfaProperty("internal", "Indicates, which part of ISO 14289 standard is followed", "part", "Integer"));
+-                XMPSchema pdfUa = createPdfaSchema("PDF/UA Universal Accessibility Schema", "http://www.aiim.org/pdfua/ns/id/", "pdfuaid" , pdfUaProperties);
++                boolean pdfUa2 = pdfUaVersion == 2;
++                String pdfUaNamespace = "http://www.aiim.org/pdfua/ns/id/";
++                String partDescription = "Indicates, which part of ISO 14289 standard is followed";
++                String revDescription = "Indicates the revision year of the ISO 14289-2 standard";
++
++                List<XMPSchema> pdfUaProperties = new ArrayList<>(2);
++                pdfUaProperties.add(createPdfaProperty("internal", partDescription, "part", "Integer"));
++
++                if (pdfUa2) {
++                    pdfUaProperties.add(createPdfaProperty("internal", revDescription, "rev", "Text"));
++                }
++
++                XMPSchema pdfUa = createPdfaSchema("PDF/UA Universal Accessibility Schema", pdfUaNamespace, "pdfuaid", pdfUaProperties);
+                 pdfAExt.addBagValue("schemas", pdfUa);
+-                pdfAExt.addNamespace("http://www.aiim.org/pdfua/ns/id/", "pdfuaid");
++                pdfAExt.addNamespace(pdfUaNamespace, "pdfuaid");
+                 pdfAExt.setPrefix("pdfuaid");
+-                pdfAExt.setTextPropertyValue("part", "1");
++                pdfAExt.setTextPropertyValue("part", pdfUa2 ? "2" : "1");
++
++                // PDF/UA-2 (ISO 14289-2, 5): the revision year is mandatory.
++                if (pdfUa2) {
++                    pdfAExt.setTextPropertyValue("rev", "2024");
++                }
+             }
+ 
+             PDMetadata metadataStream = new PDMetadata(document);
+diff --git a/openhtmltopdf-pdfbox/src/main/java/com/openhtmltopdf/pdfboxout/PdfRendererBuilder.java b/openhtmltopdf-pdfbox/src/main/java/com/openhtmltopdf/pdfboxout/PdfRendererBuilder.java
+index 4911cabc..5793a4d6 100644
+--- a/openhtmltopdf-pdfbox/src/main/java/com/openhtmltopdf/pdfboxout/PdfRendererBuilder.java
++++ b/openhtmltopdf-pdfbox/src/main/java/com/openhtmltopdf/pdfboxout/PdfRendererBuilder.java
+@@ -205,6 +205,23 @@ public class PdfRendererBuilder extends BaseRendererBuilder<PdfRendererBuilder,
+         return this;
+     }
+ 
++    /**
++     * Whether to conform to PDF/UA, and which part of ISO 14289 to target.
++     * <p>
++     * Part 1 (PDF/UA-1) targets ISO 32000-1 (PDF 1.7); part 2 (PDF/UA-2) targets
++     * ISO 32000-2 (PDF 2.0) and additionally tags the structure tree with the
++     * PDF 2.0 standard structure namespace. The legacy role map is retained either
++     * way, so UA-1 consumers can still read a UA-2 document.
++     *
++     * @param pdfUaAccessibility whether to enable PDF/UA conformance
++     * @param pdfUaVersion       1 for PDF/UA-1, 2 for PDF/UA-2
++     */
++    public PdfRendererBuilder usePdfUaAccessibility(boolean pdfUaAccessibility, int pdfUaVersion) {
++        this.state._pdfUaConform = pdfUaAccessibility;
++        this.state._pdfUaVersion = pdfUaVersion;
++        return this;
++    }
++
+     /**
+      * Sets the color profile, needed for PDF/A conformance.
+      * <p>
+diff --git a/openhtmltopdf-pdfbox/src/main/java/com/openhtmltopdf/pdfboxout/PdfRendererBuilderState.java b/openhtmltopdf-pdfbox/src/main/java/com/openhtmltopdf/pdfboxout/PdfRendererBuilderState.java
+index cd6e0bf5..b73b24cb 100644
+--- a/openhtmltopdf-pdfbox/src/main/java/com/openhtmltopdf/pdfboxout/PdfRendererBuilderState.java
++++ b/openhtmltopdf-pdfbox/src/main/java/com/openhtmltopdf/pdfboxout/PdfRendererBuilderState.java
+@@ -28,6 +28,7 @@ public class PdfRendererBuilderState extends BaseRendererBuilder.BaseRendererBui
+         public final Map<CacheStore, FSCacheEx<String, FSCacheValue>> _caches = new EnumMap<>(CacheStore.class);
+ 	public PdfAConformance _pdfAConformance = PdfAConformance.NONE;
+ 	public boolean _pdfUaConform = false;
++	public int _pdfUaVersion = 1;
+ 	public byte[] _colorProfile;
+ 	public PageSupplier _pageSupplier;
+ 	public NamespaceHandler _namespaceHandler;
+-- 
+2.54.0
+

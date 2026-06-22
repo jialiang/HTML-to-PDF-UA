@@ -1,6 +1,6 @@
 # HTML-to-PDF-UA
 
-Java App to generate PDF/UA and PDF/A-3A compliant PDFs from HTML using the community-maintained [OpenHTMLtoPDF](https://github.com/openhtmltopdf/openhtmltopdf) library.
+Java App to generate PDF/UA _(PDF/UA-1 or PDF/UA-2)_ and PDF/A _(PDF/A-3A or PDF/A-4)_ compliant PDFs from HTML using the community-maintained [OpenHTMLtoPDF](https://github.com/openhtmltopdf/openhtmltopdf) library.
 
 PDF/UA is a set of requirements for universally-accessible PDF documents. You can refer to the document [PDF/UA in a Nutshell](https://github.com/jialiang/HTML-to-PDF-UA/blob/master/PDFUA-in-a-Nutshell-PDFUA.pdf) published by the PDF association to learn more about PDF/UA.
 
@@ -60,6 +60,7 @@ You can download the compiled Java app from the [Releases page](https://github.c
 - Ensure that all links contain a `title` attribute to describe the link.
 - Run `java -jar html-to-pdf-ua.jar "path/to/your/html/file"` on your console.
 - Append `pdf/a-4` to the command to use PDF/A-4 standards instead of PDF/A-3a. PDF/A-4 is based on PDF 2.0, so the output is valid PDF/A-4 but cannot also be PDF/UA-1 compliant (which requires a PDF 1.x header).
+- Append `pdf/ua-2` to the command to target PDF/UA-2 _(ISO 14289-2)_ instead of PDF/UA-1. This implies a PDF/A-4 (PDF 2.0) base. The output is tagged with the PDF 2.0 standard structure namespace _(ISO 32005)_ on top of the existing role map, so it validates as PDF/UA-2 while remaining readable by PDF/UA-1 consumers. Note that every `<section>` must contain a heading to be tagged as a structure element; bookmarks to heading-less sections will not be valid structure destinations and should be omitted.
 - A file called `output.pdf` will be generated in the same folder as your HTML file.
 
 ## Compilation

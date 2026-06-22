@@ -27,9 +27,19 @@ public class Main {
 
     PdfAConformance pdfaLevel = PdfAConformance.PDFA_3_A;
 
-    if (args.length >= 2 && args[1].equals("pdf/a-4")) {
-      pdfaLevel = PdfAConformance.PDFA_4_A;
+    for (int i = 1; i < args.length; i++) {
+      String arg = args[i].toLowerCase();
+
+      // Both flags select the PDF 2.0 base. "pdf/ua-2" is kept as an alias of "pdf/a-4".
+      if (arg.equals("pdf/a-4") || arg.equals("pdf/ua-2")) {
+        pdfaLevel = PdfAConformance.PDFA_4_A;
+      }
     }
+
+    // The PDF/UA version is dictated by the base PDF version, not chosen independently:
+    // PDF/A-4 is PDF 2.0 -> PDF/UA-2; PDF/A-3a is PDF 1.7 -> PDF/UA-1. The other pairings
+    // (UA-1 on PDF 2.0, UA-2 on PDF 1.7) are not valid, so they are never produced.
+    int pdfUaVersion = pdfaLevel == PdfAConformance.PDFA_4_A ? 2 : 1;
 
     File inFile = new File(args[0]);
     String in = inFile.getAbsolutePath();
@@ -43,7 +53,7 @@ public class Main {
     System.out.println("Start");
 
     try {
-      generate(in, out, pdfaLevel);
+      generate(in, out, pdfaLevel, pdfUaVersion);
     } catch (Exception e) {
       System.out.println("Error");
       e.printStackTrace();
@@ -52,7 +62,7 @@ public class Main {
     System.out.println("Finish");
   }
 
-  public static void generate(String in, String out, PdfAConformance pdfaLevel) throws Exception {
+  public static void generate(String in, String out, PdfAConformance pdfaLevel, int pdfUaVersion) throws Exception {
     try (FileOutputStream os = new FileOutputStream(out)) {
       Path inPath = Paths.get(in);
 
@@ -70,7 +80,7 @@ public class Main {
       AutoFont.toBuilder(builder, fonts);
 
       builder.useFastMode();
-      builder.usePdfUaAccessbility(true);
+      builder.usePdfUaAccessibility(true, pdfUaVersion);
       builder.usePdfAConformance(pdfaLevel);
       builder.withW3cDocument(w3cDoc, folderPathString);
 
