@@ -1,15 +1,15 @@
-From f0864194fa79492c179f702ee2151c17b24770dc Mon Sep 17 00:00:00 2001
+From 98572627de49af5e978acbb50aa1ee5c8625a284 Mon Sep 17 00:00:00 2001
 From: Jia Liang <hojialiang@protonmail.com>
 Date: Tue, 23 Jun 2026 03:13:55 +0800
-Subject: [PATCH] Disable GSUB ligature substitution so all glyphs map to
+Subject: [PATCH 4/4] Disable GSUB ligature substitution so all glyphs map to
  Unicode for PDF/UA and PDF/A
 
 ---
- .../pdfboxout/PdfBoxFontResolver.java         | 28 +++++++++++++++++--
- 1 file changed, 25 insertions(+), 3 deletions(-)
+ .../pdfboxout/PdfBoxFontResolver.java         | 26 ++++++++++++++++---
+ 1 file changed, 23 insertions(+), 3 deletions(-)
 
 diff --git a/openhtmltopdf-pdfbox/src/main/java/com/openhtmltopdf/pdfboxout/PdfBoxFontResolver.java b/openhtmltopdf-pdfbox/src/main/java/com/openhtmltopdf/pdfboxout/PdfBoxFontResolver.java
-index 6ffd287f..7ae30594 100644
+index 380beea9..3ea34557 100644
 --- a/openhtmltopdf-pdfbox/src/main/java/com/openhtmltopdf/pdfboxout/PdfBoxFontResolver.java
 +++ b/openhtmltopdf-pdfbox/src/main/java/com/openhtmltopdf/pdfboxout/PdfBoxFontResolver.java
 @@ -41,6 +41,10 @@ import com.openhtmltopdf.util.LogMessageId;
@@ -31,16 +31,14 @@ index 6ffd287f..7ae30594 100644
  import java.util.*;
  import java.util.logging.Level;
  
-@@ -286,6 +291,23 @@ public class PdfBoxFontResolver implements FontResolver, Closeable {
+@@ -302,6 +307,21 @@ public class PdfBoxFontResolver implements FontResolver, Closeable {
          this._suppliedFonts.addFontLazy(new FilePDFontSupplier(fontFile, _doc), fontFamilyNameOverride, fontWeightOverride, fontStyleOverride, subset);
  	}
  
 +	/**
-+	 * Loads a TrueType font with GSUB disabled so FontBox does not apply ligature
-+	 * substitution, which produces glyphs that cannot be mapped back to Unicode
-+	 * (breaking PDF/UA and PDF/A clause 7.21.7 / 8.4.5.8). The font is registered with
-+	 * the document for closing, since the {@link PDType0Font#load(PDDocument, TrueTypeFont, boolean)}
-+	 * overload does not take ownership of it.
++	 * GSUB off so FontBox adds no ligature glyphs, which have no Unicode mapping and
++	 * break PDF/UA and PDF/A (7.21.7, 8.4.5.8). The overload taking a TrueTypeFont
++	 * does not own it, so register it for closing.
 +	 */
 +	private static PDFont loadFontWithGsubDisabled(PDDocument doc, RandomAccessRead source, boolean subset) throws IOException {
 +		TrueTypeFont ttf = new TTFParser().parse(source);
@@ -55,7 +53,7 @@ index 6ffd287f..7ae30594 100644
  	/**
  	 * Loads a Type0 font on demand
  	 */
-@@ -301,7 +323,7 @@ public class PdfBoxFontResolver implements FontResolver, Closeable {
+@@ -317,7 +337,7 @@ public class PdfBoxFontResolver implements FontResolver, Closeable {
  		@Override
  		public PDFont supply() {
  			try {
@@ -64,7 +62,7 @@ index 6ffd287f..7ae30594 100644
  			} catch (IOException e) {
  			    XRLog.log(Level.WARNING, LogMessageId.LogMessageId1Param.EXCEPTION_COULD_NOT_LOAD_FONT, _fontFile.getAbsoluteFile(), e);
  			    return null;
-@@ -648,8 +670,8 @@ public class PdfBoxFontResolver implements FontResolver, Closeable {
+@@ -669,8 +689,8 @@ public class PdfBoxFontResolver implements FontResolver, Closeable {
                  }
                  
                  try {
@@ -76,5 +74,5 @@ index 6ffd287f..7ae30594 100644
                          return loadMetrics();
                      }
 -- 
-2.54.0
+2.56.0.windows.4
 

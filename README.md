@@ -67,18 +67,18 @@ You can download the compiled Java app from the [Releases page](https://github.c
 
 Make sure you have a Java Development Kit _(21 and above)_ and Apache Maven installed.
 
-I used a slightly modified copy of the [OpenHTMLtoPDF fork](https://github.com/openhtmltopdf/openhtmltopdf) _(version `1.1.37`)_.
+I used a slightly modified copy of the [OpenHTMLtoPDF fork](https://github.com/openhtmltopdf/openhtmltopdf) _(version `1.1.105`)_.
 
 - Clone the OpenHTMLtoPDF fork and check out the pinned release:
 
   ```
   git clone https://github.com/openhtmltopdf/openhtmltopdf.git
   cd openhtmltopdf
-  git checkout 1.1.37
+  git checkout 1.1.105
   ```
 
 - Apply the [patches](https://github.com/jialiang/HTML-to-PDF-UA/tree/master/openhtmltopdf/) by doing `git am /path/to/patches/*.patch`.
-- Run `mvn clean install -DskipTests -Drevision=1.1.37` to compile, package and install it into your local Maven repository.
+- Run `mvn clean install -DskipTests -Drevision=1.1.105` to compile, package and install it into your local Maven repository.
 - Clone this repository.
 - Run `mvn clean package` to compile, test and package this project.
 
