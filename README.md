@@ -1,5 +1,12 @@
 # HTML-to-PDF-UA
 
+> [!CAUTION]
+> I've moved on to [Typst](https://typst.app/) and am no longer actively using this tool. Typst wasn't available yet when this repo was created and only started supporting tagged PDFs in late 2025.
+>
+> Authoring PDFs directly gets you cleaner results without having to wrangle with getting your document's CSS interpreted correctly. However, unlike this tool, Typst doesn't support PDF/UA-2. It supports PDF/A-4 though (note that PDF/A-4 requires PDF 2.0 and PDF/UA-1 requires PDF 1.x).
+>
+> I also explored printing to PDF with Chrome through Playwright and then fixing up the output with @cantoo/pdf-lib. However, the PDF created by Chrome requires too much patching to be made conformant and unlike with OpenHTMLtoPDF, there would be no monkeypatching upstream.
+
 Java App to generate PDF/UA _(PDF/UA-1 or PDF/UA-2)_ and PDF/A _(PDF/A-3A or PDF/A-4)_ compliant PDFs from HTML using the community-maintained [OpenHTMLtoPDF](https://github.com/openhtmltopdf/openhtmltopdf) library.
 
 PDF/UA is a set of requirements for universally-accessible PDF documents. You can refer to the document [PDF/UA in a Nutshell](https://github.com/jialiang/HTML-to-PDF-UA/blob/master/PDFUA-in-a-Nutshell-PDFUA.pdf) published by the PDF association to learn more about PDF/UA.
